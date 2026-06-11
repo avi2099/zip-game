@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti'
 
 export default function WinModal({
   puzzle, timeSeconds, hintsUsed, formatTime,
-  user, onNextPuzzle, onPlayAgain, onClose
+  user, nextLabel, onNextPuzzle, onPlayAgain, onClose
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -110,7 +110,7 @@ export default function WinModal({
             onClick={onNextPuzzle}
             className="flex-1 py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
           >
-            Next Puzzle
+            {nextLabel ? `Next: ${nextLabel}` : 'Next Puzzle'}
           </button>
         </div>
 

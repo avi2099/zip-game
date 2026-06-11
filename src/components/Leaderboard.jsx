@@ -1,24 +1,27 @@
 import { useState, useEffect } from 'react'
 import { supabase, isSupabaseConfigured } from '../supabase'
-import puzzles from '../data/puzzles'
+import { todayKey } from '../data/levels'
 
 export default function Leaderboard({ user }) {
-  const [selectedPuzzle, setSelectedPuzzle] = useState(puzzles[0].id)
+  const [tab, setTab] = useState('daily') // 'daily' | 'level'
+  const [level, setLevel] = useState(1)
   const [scores, setScores] = useState([])
   const [loading, setLoading] = useState(false)
   const [todayOnly, setTodayOnly] = useState(false)
 
+  const puzzleId = tab === 'daily' ? `daily_${todayKey()}` : `level_${level}`
+
   useEffect(() => {
     if (!isSupabaseConfigured()) return
     fetchScores()
-  }, [selectedPuzzle, todayOnly])
+  }, [puzzleId, todayOnly])
 
   const fetchScores = async () => {
     setLoading(true)
     let query = supabase
       .from('scores')
       .select('*')
-      .eq('puzzle_id', selectedPuzzle)
+      .eq('puzzle_id', puzzleId)
       .order('time_seconds', { ascending: true })
       .limit(10)
 
@@ -52,20 +55,50 @@ export default function Leaderboard({ user }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {puzzles.map(p => (
-          <button
-            key={p.id}
-            onClick={() => setSelectedPuzzle(p.id)}
-            className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
-              selectedPuzzle === p.id
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            {p.name}
-          </button>
-        ))}
+      {/* Mode tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setTab('daily')}
+          className={`px-4 py-1.5 text-sm rounded-lg font-medium transition-colors ${
+            tab === 'daily'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+        >
+          Daily ({todayKey()})
+        </button>
+        <button
+          onClick={() => setTab('level')}
+          className={`px-4 py-1.5 text-sm rounded-lg font-medium transition-colors ${
+            tab === 'level'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+        >
+          Levels
+        </button>
+
+        {tab === 'level' && (
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              onClick={() => setLevel(l => Math.max(1, l - 1))}
+              className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200
+                         hover:bg-gray-200 dark:hover:bg-gray-600 font-bold"
+            >
+              −
+            </button>
+            <span className="px-3 font-mono font-bold text-gray-800 dark:text-white min-w-16 text-center">
+              Lv {level}
+            </span>
+            <button
+              onClick={() => setLevel(l => l + 1)}
+              className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200
+                         hover:bg-gray-200 dark:hover:bg-gray-600 font-bold"
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
@@ -85,7 +118,7 @@ export default function Leaderboard({ user }) {
         <div className="text-center py-8 text-gray-500">Loading...</div>
       ) : scores.length === 0 ? (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          No scores yet. Be the first!
+          No scores yet for this puzzle. Be the first!
         </div>
       ) : (
         <div className="overflow-x-auto">

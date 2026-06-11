@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '../supabase'
-import puzzles from '../data/puzzles'
 
 export default function Profile({ user }) {
   const [scores, setScores] = useState([])
@@ -80,21 +79,17 @@ export default function Profile({ user }) {
         </p>
       ) : (
         <div className="space-y-3">
-          {puzzles.map(puzzle => {
-            const best = bestByPuzzle[puzzle.id]
-            if (!best) return null
-            return (
+          {Object.values(bestByPuzzle)
+            .sort((a, b) => (a.puzzle_id > b.puzzle_id ? 1 : -1))
+            .map(best => (
               <div
-                key={puzzle.id}
+                key={best.puzzle_id}
                 className="flex items-center justify-between p-3 bg-white dark:bg-gray-800
                            rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <div>
-                  <span className="font-medium text-gray-800 dark:text-white">{puzzle.name}</span>
-                  <span className="text-sm text-gray-400 dark:text-gray-500 ml-2">
-                    {puzzle.size}×{puzzle.size}
-                  </span>
-                </div>
+                <span className="font-medium text-gray-800 dark:text-white">
+                  {best.puzzle_name || best.puzzle_id}
+                </span>
                 <div className="flex items-center gap-4">
                   <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">
                     {formatTime(best.time_seconds)}
@@ -104,8 +99,7 @@ export default function Profile({ user }) {
                   )}
                 </div>
               </div>
-            )
-          })}
+            ))}
         </div>
       )}
 
