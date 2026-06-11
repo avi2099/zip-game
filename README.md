@@ -2,6 +2,13 @@
 
 A path-drawing puzzle game built with React, Tailwind CSS, and Supabase. Draw a path through every cell on the grid, hitting numbered waypoints in order.
 
+## Game Modes
+
+- **Daily Challenge** — one shared puzzle worldwide per date (seeded by the date), harder on weekends. Compete on the same board as everyone else.
+- **Endless Levels** — procedurally generated, difficulty rises forever: grids grow from 4×4 to 8×8, walls multiply, waypoints thin out. Solve a level to unlock the next; progress and best times are saved locally.
+
+Puzzles are generated with a seeded random Hamiltonian-path algorithm (backbite method), so Level 12 is the same puzzle for every player — leaderboard times stay comparable — while no two levels ever repeat a layout.
+
 ## Quick Start (Local Development)
 
 ```bash
@@ -78,11 +85,11 @@ In **Supabase > Authentication > URL Configuration**:
 ## Game Rules
 
 - Click waypoint **1** to start drawing the path
-- Move through adjacent cells (horizontal/vertical only)
+- Move through adjacent cells (horizontal/vertical only) — click, drag, touch, or arrow keys
 - Walls (thick borders) block movement between cells
 - Visit **every cell** exactly once
 - Pass through numbered waypoints **in order**
-- Use hints (max 3) if stuck
+- Use hints (max 3 per puzzle) if stuck
 
 ## Tech Stack
 
