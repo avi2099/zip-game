@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase, isSupabaseConfigured } from '../supabase'
 import { todayKey } from '../data/levels'
 
-export default function Leaderboard({ user }) {
+export default function Leaderboard({ player }) {
   const [tab, setTab] = useState('daily') // 'daily' | 'level'
   const [level, setLevel] = useState(1)
   const [scores, setScores] = useState([])
@@ -137,7 +137,7 @@ export default function Leaderboard({ user }) {
                 <tr
                   key={score.id}
                   className={`border-b border-gray-100 dark:border-gray-700/50 ${
-                    user?.id === score.user_id
+                    player?.playerId === score.player_id
                       ? 'bg-indigo-50 dark:bg-indigo-900/20'
                       : ''
                   }`}
@@ -145,15 +145,11 @@ export default function Leaderboard({ user }) {
                   <td className="py-2 px-2 font-medium">
                     {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                   </td>
-                  <td className="py-2 px-2">
-                    <div className="flex items-center gap-2">
-                      {score.avatar_url && (
-                        <img src={score.avatar_url} alt="" className="w-6 h-6 rounded-full" />
-                      )}
-                      <span className="text-gray-800 dark:text-gray-200">
-                        {score.display_name || 'Anonymous'}
-                      </span>
-                    </div>
+                  <td className="py-2 px-2 text-gray-800 dark:text-gray-200">
+                    {score.display_name || 'Anonymous'}
+                    {player?.playerId === score.player_id && (
+                      <span className="ml-1 text-xs text-indigo-500">(you)</span>
+                    )}
                   </td>
                   <td className="py-2 px-2 font-mono text-indigo-600 dark:text-indigo-400">
                     {formatTime(score.time_seconds)}

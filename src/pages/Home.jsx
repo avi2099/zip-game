@@ -16,10 +16,11 @@ const difficultyColors = {
 
 const fmtBest = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 
-export default function Home({ user }) {
+export default function Home({ player }) {
   const [progress, setProgress] = useState(loadProgress)
   const [mode, setMode] = useState(null) // null | { type: 'level', level } | { type: 'daily' }
   const [showWin, setShowWin] = useState(false)
+  const [scoreSaved, setScoreSaved] = useState(false)
 
   const puzzle = useMemo(() => {
     if (!mode) return null
@@ -40,7 +41,11 @@ export default function Home({ user }) {
       timer.stop()
       setShowWin(true)
       recordWin()
-      saveScore()
+      // Auto-save if we already know the player's name; otherwise the
+      // win modal will prompt for one and call saveScore on submit.
+      if (isSupabaseConfigured() && player.name) {
+        saveScore(player.name)
+      }
     }
   }, [game.solved])
 
@@ -57,18 +62,19 @@ export default function Home({ user }) {
     })
   }
 
-  const saveScore = async () => {
-    if (!user || !isSupabaseConfigured()) return
+  const saveScore = async (name) => {
+    if (!isSupabaseConfigured()) return
+    player.setName(name)
     try {
       await supabase.from('scores').insert({
-        user_id: user.id,
-        display_name: user.user_metadata?.full_name,
-        avatar_url: user.user_metadata?.avatar_url,
+        player_id: player.playerId,
+        display_name: name,
         puzzle_id: puzzle.id,
         puzzle_name: puzzle.name,
         time_seconds: timer.seconds,
         hints_used: game.hintsUsed
       })
+      setScoreSaved(true)
     } catch (e) {
       console.error('Failed to save score:', e)
     }
@@ -77,6 +83,7 @@ export default function Home({ user }) {
   const startMode = (m) => {
     setMode(m)
     setShowWin(false)
+    setScoreSaved(false)
     timer.reset()
   }
 
@@ -92,6 +99,7 @@ export default function Home({ user }) {
     game.clear()
     timer.reset()
     setShowWin(false)
+    setScoreSaved(false)
   }
 
   const handleClear = () => {
@@ -258,7 +266,10 @@ export default function Home({ user }) {
           timeSeconds={timer.seconds}
           hintsUsed={game.hintsUsed}
           formatTime={timer.formatTime}
-          user={user}
+          isConfigured={isSupabaseConfigured()}
+          scoreSaved={scoreSaved}
+          savedName={player.name}
+          onSaveScore={saveScore}
           nextLabel={mode.type === 'daily' ? `Level ${progress.unlocked}` : `Level ${mode.level + 1}`}
           onNextPuzzle={handleNextPuzzle}
           onPlayAgain={handlePlayAgain}

@@ -16,15 +16,17 @@ npm install
 npm run dev
 ```
 
-The game is fully playable locally without Supabase — auth and leaderboard features are disabled until configured.
+The game is fully playable locally without Supabase — the leaderboard is disabled until configured, and everything else (puzzles, levels, daily, local best times) works.
 
-## Supabase Setup (for Auth + Leaderboard)
+## Supabase Setup (for the Leaderboard)
+
+No login required — players just type a name before posting a score. Setup is two short steps: no Google Cloud, no OAuth, no email config.
 
 ### 1. Create Supabase Project
 
 1. Go to [supabase.com](https://supabase.com) and create a new project
 2. Go to **Settings > API** and copy your **Project URL** and **anon/public key**
-3. Create a `.env` file in the project root:
+3. Create a `.env` file in the project root (and add the same two vars in Vercel for production):
 
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
@@ -38,9 +40,8 @@ In **Supabase SQL Editor**, run:
 ```sql
 CREATE TABLE scores (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  player_id text,
   display_name text,
-  avatar_url text,
   puzzle_id text NOT NULL,
   puzzle_name text,
   time_seconds integer NOT NULL,
@@ -50,28 +51,16 @@ CREATE TABLE scores (
 
 ALTER TABLE scores ENABLE ROW LEVEL SECURITY;
 
+-- Anyone can read the leaderboard
 CREATE POLICY "Public read" ON scores
   FOR SELECT USING (true);
 
-CREATE POLICY "Auth insert" ON scores
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Anyone can post a score (no login)
+CREATE POLICY "Public insert" ON scores
+  FOR INSERT WITH CHECK (true);
 ```
 
-### 3. Enable Google OAuth
-
-1. Go to **Authentication > Providers > Google** in Supabase dashboard
-2. Enable it and add your Google OAuth Client ID and Secret
-3. Get these free from [console.cloud.google.com](https://console.cloud.google.com):
-   - Create a new project (or use existing)
-   - Go to **APIs & Services > Credentials**
-   - Create **OAuth 2.0 Client ID** (Web application)
-   - Add authorized redirect URI: `https://your-project-id.supabase.co/auth/v1/callback`
-
-### 4. Configure Auth URLs
-
-In **Supabase > Authentication > URL Configuration**:
-- **Site URL**: `https://your-app-name.vercel.app`
-- **Redirect URLs**: `https://your-app-name.vercel.app/**`
+That's it. The `anon` key is safe to expose in the browser — it's designed for public client-side use.
 
 ## Deploy to Vercel
 
@@ -95,6 +84,5 @@ In **Supabase > Authentication > URL Configuration**:
 
 - **Frontend**: React + Vite
 - **Styling**: Tailwind CSS
-- **Auth**: Supabase Auth (Google OAuth)
-- **Database**: Supabase PostgreSQL
+- **Leaderboard**: Supabase PostgreSQL (no login — name-based)
 - **Hosting**: Vercel

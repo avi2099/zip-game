@@ -3,9 +3,11 @@ import confetti from 'canvas-confetti'
 
 export default function WinModal({
   puzzle, timeSeconds, hintsUsed, formatTime,
-  user, nextLabel, onNextPuzzle, onPlayAgain, onClose
+  isConfigured, scoreSaved, savedName, onSaveScore,
+  nextLabel, onNextPuzzle, onPlayAgain, onClose
 }) {
   const [copied, setCopied] = useState(false)
+  const [nameInput, setNameInput] = useState(savedName || '')
 
   useEffect(() => {
     confetti({
@@ -54,6 +56,11 @@ export default function WinModal({
     }
   }
 
+  const handleSave = () => {
+    const clean = nameInput.trim()
+    if (clean) onSaveScore(clean)
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
@@ -90,6 +97,37 @@ export default function WinModal({
           </pre>
         </div>
 
+        {/* Leaderboard save (no login — just a name) */}
+        {isConfigured && (
+          scoreSaved ? (
+            <p className="text-center text-sm text-green-600 dark:text-green-400 font-medium">
+              ✓ Saved to leaderboard{savedName ? ` as ${savedName}` : ''}
+            </p>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSave()}
+                placeholder="Your name"
+                maxLength={20}
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600
+                           bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+              <button
+                onClick={handleSave}
+                disabled={!nameInput.trim()}
+                className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg
+                           font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+            </div>
+          )
+        )}
+
         <button
           onClick={handleCopy}
           className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
@@ -114,9 +152,9 @@ export default function WinModal({
           </button>
         </div>
 
-        {!user && (
-          <p className="text-center text-sm text-amber-600 dark:text-amber-400">
-            Sign in to save your score to the leaderboard!
+        {!isConfigured && (
+          <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+            Leaderboard not configured yet — your time is saved locally.
           </p>
         )}
       </div>
